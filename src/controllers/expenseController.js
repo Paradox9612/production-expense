@@ -79,6 +79,37 @@ const createExpense = async (req, res) => {
           message: 'You do not have permission to create expense for this journey'
         });
       }
+
+      // Check if journey already has an expense - if so, update it instead of creating new
+      if (journey.expenseId) {
+        const existingExpense = await Expense.findById(journey.expenseId);
+        if (existingExpense) {
+          // Update existing expense by adding the new amount
+          existingExpense.amount += amount;
+          await existingExpense.save();
+
+          // Audit log for update
+          await Audit.log({
+            action: 'expense_updated',
+            performedBy: userId,
+            targetUser: userId,
+            metadata: {
+              expenseId: existingExpense._id,
+              journeyId: journeyId,
+              addedAmount: amount,
+              newTotalAmount: existingExpense.amount
+            },
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent')
+          });
+
+          return res.status(200).json({
+            success: true,
+            message: 'Expense added to existing journey expense',
+            data: existingExpense
+          });
+        }
+      }
     }
 
     // Create expense

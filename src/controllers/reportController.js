@@ -182,11 +182,15 @@ const transformExpenseData = async (expenses, ratePerKm) => {
 
     // Categorize and sum expenses
     journeyExpenses.forEach(expense => {
-      const amount = expense.amount || 0;
+      const amount = expense.approvedAmount || expense.amount || 0;
       const type = expense.type;
 
+      // For journey-attached expenses (except main journey expense), add to travel expense
+      if (expense.journeyId && type !== 'journey') {
+        petrolExpense += amount;
+      }
       // Travelling Amount = Tickets + Car Rental + Toll
-      if (['tickets', 'car_rental', 'toll'].includes(type)) {
+      else if (['tickets', 'car_rental', 'toll'].includes(type)) {
         travellingAmount += amount;
       }
       // Site Expenses = Courier + Local Purchase + Transport Charges + Office Expense
@@ -210,9 +214,9 @@ const transformExpenseData = async (expenses, ratePerKm) => {
     reportRows.push({
       date: journey ? formatDate(journey.startTimestamp) : formatDate(journeyExpenses[0]?.date),
       customerName: journey?.customerName || journey?.name || 'General Expense',
-      natureOfWork: journey?.natureOfWork || 'N/A',
-      siteLocation: journey?.endAddress || journey?.siteLocation || 'N/A',
-      typeOfVisit: journey?.typeOfVisit ? journey.typeOfVisit.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A',
+      natureOfWork: (journey?.natureOfWork && journey.natureOfWork.trim()) ? journey.natureOfWork.trim() : 'Not Specified',
+      siteLocation: journey?.endAddress || journey?.siteLocation || 'Not Specified',
+      typeOfVisit: journey?.typeOfVisit ? journey.typeOfVisit.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not Specified',
       travellingAmount: travellingAmount,
       siteExpenses: siteExpenses,
       lodgingRoom: lodgingRoom,
