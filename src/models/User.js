@@ -111,8 +111,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indexes for performance
-userSchema.index({ email: 1 });
-userSchema.index({ employeeId: 1 });
 userSchema.index({ role: 1, isActive: 1 });
 userSchema.index({ assignedTo: 1 }); // For filtering users by assigned admin
 userSchema.index({ createdAt: -1 });

@@ -42,7 +42,8 @@ app.get('/', (req, res) => {
       advances: '/api/advances',
       uploads: '/api/uploads',
       dashboard: '/api/dashboard',
-      reports: '/api/reports'
+      reports: '/api/reports',
+      settings: '/api/settings'
     },
     docs: 'See README.md for API documentation'
   });
@@ -66,7 +67,7 @@ app.use('/api/advances', require('./routes/advances'));
 app.use('/api/uploads', require('./routes/uploads'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/reports', require('./routes/reports'));
-// app.use('/api/settings', require('./routes/settings')); // Temporarily disabled due to middleware loading issue
+app.use('/api/settings', require('./routes/settings'));
 
 // 404 handler
 app.use((req, res) => {

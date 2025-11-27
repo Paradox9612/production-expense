@@ -508,6 +508,82 @@ const deleteEmployee = async (req, res) => {
 };
 
 /**
+ * Reset employee password (generate new password)
+ * POST /api/employees/:id/reset-password
+ * @access Admin and Super Admin only
+ * @description
+ * - Generates a new random password for the employee
+ * - Returns the new password to the admin
+ * - Super Admin can reset any employee's password
+ * - Admin can only reset passwords for users assigned to them
+ */
+const resetPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const employee = await User.findById(id);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found'
+      });
+    }
+
+    // RBAC: Check access permissions
+    if (req.user.role === 'admin') {
+      // Admin can only reset passwords for users assigned to them
+      if (!employee.assignedTo || employee.assignedTo.toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only reset passwords for users assigned to you.'
+        });
+      }
+    }
+    // Super Admin can reset any employee's password
+
+    // Generate new password
+    const newPassword = generatePassword();
+
+    // Update password (will be hashed by pre-save hook)
+    employee.password = newPassword;
+    await employee.save();
+
+    // Create audit log
+    await Audit.log({
+      action: 'password_reset',
+      performedBy: req.user.id,
+      targetUser: employee._id,
+      metadata: {
+        employeeId: employee.employeeId,
+        resetBy: 'admin'
+      },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      severity: 'high'
+    });
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully',
+      data: {
+        newPassword: newPassword,
+        employeeId: employee.employeeId,
+        employeeName: employee.name
+      }
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reset password',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
  * Update employee password
  * PUT /api/employees/:id/password
  * @access Admin and Super Admin only
@@ -580,6 +656,7 @@ module.exports = {
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
-  updatePassword
+  updatePassword,
+  resetPassword
 };
 

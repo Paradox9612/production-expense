@@ -31,6 +31,14 @@ const startJourney = async (req, res) => {
     } = req.body;
     const userId = req.user.id;
 
+    console.log('Received journey data:', {
+      name,
+      customerName,
+      natureOfWork,
+      typeOfVisit,
+      numberOfMachines
+    });
+
     // Check if user already has an active journey
     const activeJourney = await Journey.findActiveJourney(userId);
 
@@ -225,6 +233,9 @@ const endJourney = async (req, res) => {
     const cost = calculateJourneyCost(finalDistance);
     console.log('Calculated cost:', cost);
 
+    // Get global rate per km setting
+    const ratePerKm = await Settings.getRatePerKm();
+
     // Create expense automatically
     console.log('Creating expense...');
     const expense = new Expense({
@@ -241,7 +252,7 @@ const endJourney = async (req, res) => {
       systemDistance: systemDistance,
       manualDistance: req.body.manualDistance ? parseFloat(req.body.manualDistance) : null,
       gpsOffline: journey.gpsOffline,
-      distanceRate: 8, // Assuming 8 INR per km
+      distanceRate: ratePerKm,
       status: 'pending'
     });
 

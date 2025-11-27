@@ -132,9 +132,9 @@ exports.updateSetting = async (req, res) => {
 
     // Create audit log
     await Audit.create({
-      userId,
-      action: 'SETTING_UPDATED',
-      details: {
+      performedBy: userId,
+      action: 'settings_updated',
+      metadata: {
         key: setting.key,
         oldValue: setting.value,
         newValue: value

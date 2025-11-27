@@ -9,23 +9,6 @@ const rateLimit = require('express-rate-limit');
 const { login, refreshToken, logout, getCurrentUser, updateProfile, register } = require('../controllers/authController');
 const { authMiddleware, requireSuperAdmin } = require('../middleware/auth');
 
-/**
- * Rate limiter for login endpoint
- * Prevents brute force attacks
- * 5 requests per 15 minutes per IP
- */
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per window
-  message: {
-    success: false,
-    message: 'Too many login attempts. Please try again after 15 minutes.'
-  },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  skipSuccessfulRequests: false, // Count successful requests
-  skipFailedRequests: false // Count failed requests
-});
 
 /**
  * Rate limiter for refresh token endpoint
@@ -49,7 +32,7 @@ const refreshLimiter = rateLimit({
  * @body    { email: string, password: string }
  * @returns { success: boolean, message: string, data: { user: object, accessToken: string, refreshToken: string } }
  */
-router.post('/login', loginLimiter, login);
+router.post('/login', login);
 
 /**
  * @route   POST /api/auth/register

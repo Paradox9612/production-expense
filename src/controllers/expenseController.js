@@ -602,11 +602,144 @@ const deleteExpense = async (req, res) => {
   }
 };
 
+/**
+ * Get journey expense totals
+ * GET /api/expenses/journey/:journeyId/total
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @description
+ * Returns the total expenses for a specific journey including:
+ * - Sum of all approved expenses for the journey
+ * - Optionally includes current pending expense if expenseId is provided
+ */
+const getJourneyExpenseTotal = async (req, res) => {
+  try {
+    const { journeyId } = req.params;
+    const { includeExpenseId } = req.query; // Optional: include a specific pending expense
+    const userId = req.user.userId;
+    const userRole = req.user.role;
+
+    // Validate journey exists and user has access
+    const journey = await Journey.findById(journeyId);
+    if (!journey) {
+      return res.status(404).json({
+        success: false,
+        message: 'Journey not found'
+      });
+    }
+
+    // RBAC: Check if user has access to this journey
+    if (userRole === 'user' && journey.userId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to view this journey'
+      });
+    } else if (userRole === 'admin') {
+      // Admin can only view journeys from users assigned to them
+      const assignedUsers = await User.find({ assignedTo: userId }).select('_id');
+      const assignedUserIds = assignedUsers.map(u => u._id.toString());
+      if (!assignedUserIds.includes(journey.userId.toString())) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only view journeys from users assigned to you.'
+        });
+      }
+    }
+    // Super Admin can view all journeys
+
+    // Calculate total from approved expenses for this journey
+    const approvedTotalResult = await Expense.aggregate([
+      {
+        $match: {
+          journeyId: journey._id,
+          status: 'approved'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$approvedAmount' },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const approvedTotal = approvedTotalResult.length > 0 ? approvedTotalResult[0].total : 0;
+    const approvedCount = approvedTotalResult.length > 0 ? approvedTotalResult[0].count : 0;
+
+    // Include pending expense if specified
+    let pendingAmount = 0;
+    let pendingExpense = null;
+    if (includeExpenseId) {
+      const expense = await Expense.findOne({
+        _id: includeExpenseId,
+        journeyId: journey._id,
+        status: 'pending'
+      });
+
+      if (expense) {
+        // Calculate the approved amount for pending expense based on current logic
+        if (expense.type === 'journey') {
+          // For journey expenses, approved amount includes distance calculation
+          const ratePerKm = expense.distanceRate || 8;
+          let distanceCost = 0;
+
+          // Use approved option if set, otherwise default to option 1
+          const approvedOption = expense.approvedOption || 1;
+          if (approvedOption === 1) {
+            distanceCost = (expense.systemDistance || 0) * ratePerKm;
+          } else if (approvedOption === 2) {
+            distanceCost = (expense.manualDistance || 0) * ratePerKm;
+          } else if (approvedOption === 3) {
+            distanceCost = (expense.adminDistance || 0) * ratePerKm;
+          }
+
+          pendingAmount = expense.amount + distanceCost;
+        } else {
+          pendingAmount = expense.amount;
+        }
+        pendingExpense = expense;
+      }
+    }
+
+    const totalAmount = approvedTotal + pendingAmount;
+
+    res.json({
+      success: true,
+      message: 'Journey expense total retrieved successfully',
+      data: {
+        journeyId: journey._id,
+        journeyName: journey.name,
+        approvedTotal,
+        approvedCount,
+        pendingAmount,
+        pendingExpenseId: pendingExpense?._id,
+        totalAmount,
+        breakdown: {
+          approved: approvedTotal,
+          pending: pendingAmount,
+          total: totalAmount
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get journey expense total error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve journey expense total',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createExpense,
   getAllExpenses,
   getExpenseById,
   updateExpense,
-  deleteExpense
+  deleteExpense,
+  getJourneyExpenseTotal
 };
 

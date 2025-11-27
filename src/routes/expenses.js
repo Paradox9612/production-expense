@@ -25,7 +25,8 @@ const {
   getAllExpenses,
   getExpenseById,
   updateExpense,
-  deleteExpense
+  deleteExpense,
+  getJourneyExpenseTotal
 } = require('../controllers/expenseController');
 
 const {
@@ -126,6 +127,18 @@ router.post(
   validateObjectId('id'),
   validate(rejectExpenseSchema),
   rejectExpense
+);
+
+/**
+ * @route   GET /api/expenses/journey/:journeyId/total
+ * @desc    Get total expenses for a specific journey
+ * @access  Private (authenticated users with journey access)
+ * @query   includeExpenseId - Optional: include a specific pending expense in total
+ */
+router.get(
+  '/journey/:journeyId/total',
+  validateObjectId('journeyId'),
+  getJourneyExpenseTotal
 );
 
 module.exports = router;

@@ -31,6 +31,7 @@ const auditSchema = new mongoose.Schema({
       'login',
       'logout',
       'password_changed',
+      'password_reset',
       'settings_updated',
       'report_generated',
       'other'

@@ -85,7 +85,7 @@ const generateExpenseReport = async (req, res) => {
     // Fetch expenses with populated fields
     const expenses = await Expense.find(query)
       .populate('userId', 'name employeeId')
-      .populate('journeyId', 'name customerName natureOfWork typeOfVisit siteLocation endAddress startTimestamp distance machineVisitCost')
+      .populate('journeyId')
       .populate('approvedBy', 'name')
       .sort({ date: 1, userId: 1 })
       .lean();
@@ -176,7 +176,7 @@ const transformExpenseData = async (expenses, ratePerKm) => {
     let siteExpenses = 0; // Courier + Local Purchase + Transport Charges + Office Expense
     let lodgingRoom = 0; // Lodging
     let otherExpense = 0; // Food + Others
-    let totalKm = journey?.distance || 0;
+    let totalKm = journey?.calculatedDistance || 0;
     let petrolExpense = totalKm * ratePerKm;
     let machineVisitCost = journey?.machineVisitCost || 0;
 
@@ -185,9 +185,9 @@ const transformExpenseData = async (expenses, ratePerKm) => {
       const amount = expense.approvedAmount || expense.amount || 0;
       const type = expense.type;
 
-      // For journey-attached expenses (except main journey expense), add to travel expense
+      // For journey-attached expenses (except main journey expense), add to travelling amount
       if (expense.journeyId && type !== 'journey') {
-        petrolExpense += amount;
+        travellingAmount += amount;
       }
       // Travelling Amount = Tickets + Car Rental + Toll
       else if (['tickets', 'car_rental', 'toll'].includes(type)) {
@@ -214,9 +214,9 @@ const transformExpenseData = async (expenses, ratePerKm) => {
     reportRows.push({
       date: journey ? formatDate(journey.startTimestamp) : formatDate(journeyExpenses[0]?.date),
       customerName: journey?.customerName || journey?.name || 'General Expense',
-      natureOfWork: (journey?.natureOfWork && journey.natureOfWork.trim()) ? journey.natureOfWork.trim() : 'Not Specified',
-      siteLocation: journey?.endAddress || journey?.siteLocation || 'Not Specified',
-      typeOfVisit: journey?.typeOfVisit ? journey.typeOfVisit.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not Specified',
+      natureOfWork: journey?.natureOfWork || 'N/A',
+      siteLocation: journey?.endAddress || journey?.siteLocation || 'N/A',
+      typeOfVisit: journey?.typeOfVisit ? journey.typeOfVisit.replace('_', ' ') : 'N/A',
       travellingAmount: travellingAmount,
       siteExpenses: siteExpenses,
       lodgingRoom: lodgingRoom,

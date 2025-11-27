@@ -24,28 +24,32 @@ const journeySchema = new mongoose.Schema({
   customerName: {
     type: String,
     trim: true,
-    maxlength: [100, 'Customer name cannot exceed 100 characters']
+    maxlength: [100, 'Customer name cannot exceed 100 characters'],
+    default: null
   },
 
   // Nature of Work
   natureOfWork: {
     type: String,
     trim: true,
-    maxlength: [500, 'Nature of work cannot exceed 500 characters']
+    maxlength: [500, 'Nature of work cannot exceed 500 characters'],
+    default: null
   },
 
   // Type of Visit
   typeOfVisit: {
     type: String,
     enum: ['sales_call', 'service_call', 'inspection', 'group_visit', 'machine_visit'],
-    trim: true
+    trim: true,
+    default: null
   },
 
   // Machine Visit Details (only for machine_visit type)
   numberOfMachines: {
     type: Number,
     min: [1, 'Number of machines must be at least 1'],
-    max: [10, 'Number of machines cannot exceed 10']
+    max: [10, 'Number of machines cannot exceed 10'],
+    default: null
   },
   machineVisitCost: {
     type: Number,

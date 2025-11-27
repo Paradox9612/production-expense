@@ -12,7 +12,8 @@ const {
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
-  updatePassword
+  updatePassword,
+  resetPassword
 } = require('../controllers/employeeController');
 const {
   validate,
@@ -109,6 +110,19 @@ router.put(
   validateObjectId('id'),
   validate(updatePasswordSchema),
   updatePassword
+);
+
+/**
+ * @route   POST /api/employees/:id/reset-password
+ * @desc    Reset employee password (generate new random password)
+ * @access  Admin only
+ * @param   id - Employee MongoDB ObjectId
+ * @returns newPassword - The newly generated password
+ */
+router.post(
+  '/:id/reset-password',
+  validateObjectId('id'),
+  resetPassword
 );
 
 module.exports = router;

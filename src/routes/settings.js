@@ -12,8 +12,7 @@ const {
   updateSetting,
   initializeSettings
 } = require('../controllers/settingsController');
-const authMiddleware = require('../middleware/auth');
-const { requireAdminOrSuperAdmin, requireSuperAdmin } = require('../middleware/auth');
+const { authMiddleware, requireAdminOrSuperAdmin, requireSuperAdmin } = require('../middleware/auth');
 
 // All routes require authentication
 router.use(authMiddleware);

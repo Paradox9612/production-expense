@@ -12,8 +12,7 @@ const settingsSchema = new mongoose.Schema({
     required: [true, 'Setting key is required'],
     unique: true,
     trim: true,
-    uppercase: true,
-    index: true
+    uppercase: true
   },
 
   // Setting Value
@@ -81,7 +80,6 @@ const settingsSchema = new mongoose.Schema({
 });
 
 // Indexes
-settingsSchema.index({ key: 1 }, { unique: true });
 settingsSchema.index({ category: 1 });
 settingsSchema.index({ isVisible: 1 });
 

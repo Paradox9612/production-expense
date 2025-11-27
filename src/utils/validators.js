@@ -212,6 +212,45 @@ const startJourneySchema = Joi.object({
       'string.max': 'Journey name cannot exceed 100 characters',
       'any.required': 'Journey name is required'
     }),
+  customerName: Joi.string()
+    .trim()
+    .max(100)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Customer name cannot exceed 100 characters'
+    }),
+  natureOfWork: Joi.string()
+    .trim()
+    .max(500)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Nature of work cannot exceed 500 characters'
+    }),
+  typeOfVisit: Joi.string()
+    .valid('sales_call', 'service_call', 'inspection', 'group_visit', 'machine_visit')
+    .optional()
+    .messages({
+      'any.only': 'Type of visit must be one of: sales_call, service_call, inspection, group_visit, machine_visit'
+    }),
+  numberOfMachines: Joi.number()
+    .integer()
+    .min(1)
+    .max(100)
+    .optional()
+    .when('typeOfVisit', {
+      is: 'machine_visit',
+      then: Joi.required(),
+      otherwise: Joi.optional()
+    })
+    .messages({
+      'number.base': 'Number of machines must be a number',
+      'number.integer': 'Number of machines must be an integer',
+      'number.min': 'Number of machines must be at least 1',
+      'number.max': 'Number of machines cannot exceed 100',
+      'any.required': 'Number of machines is required for machine visit type'
+    }),
   startCoordinates: coordinatesSchema.required(),
   startAddress: Joi.string().trim().max(500).optional().allow(''),
   gpsOffline: Joi.boolean().default(false),
