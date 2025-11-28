@@ -115,7 +115,7 @@ const expenseSchema = new mongoose.Schema({
   },
   distanceRate: {
     type: Number,
-    default: 8, // ₹8 per km default
+    // No default - must be set explicitly from Settings.getRatePerKm() when creating journey expenses
     min: [0, 'Rate cannot be negative']
   },
 

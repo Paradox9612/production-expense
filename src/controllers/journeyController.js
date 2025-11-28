@@ -229,12 +229,12 @@ const endJourney = async (req, res) => {
     await journey.save();
     console.log('Journey saved successfully');
 
-    // Calculate cost based on final distance
-    const cost = calculateJourneyCost(finalDistance);
-    console.log('Calculated cost:', cost);
-
     // Get global rate per km setting
     const ratePerKm = await Settings.getRatePerKm();
+
+    // Calculate cost based on final distance
+    const cost = calculateJourneyCost(finalDistance, ratePerKm);
+    console.log('Calculated cost:', cost);
 
     // Create expense automatically
     console.log('Creating expense...');

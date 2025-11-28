@@ -8,6 +8,7 @@ const Journey = require('../models/Journey');
 const User = require('../models/User');
 const Audit = require('../models/Audit');
 const MonthLock = require('../models/MonthLock');
+const Settings = require('../models/Settings');
 const { calculateVarianceWithCategory } = require('../utils/varianceCalculator');
 
 /**
@@ -682,7 +683,8 @@ const getJourneyExpenseTotal = async (req, res) => {
         // Calculate the approved amount for pending expense based on current logic
         if (expense.type === 'journey') {
           // For journey expenses, approved amount includes distance calculation
-          const ratePerKm = expense.distanceRate || 8;
+          // Use expense's distanceRate if available, otherwise fetch current rate from Settings
+          const ratePerKm = expense.distanceRate || await Settings.getRatePerKm();
           let distanceCost = 0;
 
           // Use approved option if set, otherwise default to option 1

@@ -17,11 +17,37 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+// Parse CORS origins from environment variable
+// Supports comma-separated origins and mobile apps
+const getCorsOrigins = () => {
+  const origins = process.env.CORS_ORIGIN;
+  if (!origins) return '*'; // Allow all if not configured
+
+  // Split comma-separated origins into array
+  const originList = origins.split(',').map(origin => origin.trim());
+
+  // Return function for dynamic origin checking (supports mobile apps)
+  return (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+
+    // Check if origin is in allowed list
+    if (originList.includes(origin) || originList.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  };
+};
+
 // Middleware
 app.use(helmet()); // Security headers
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  credentials: true
+  origin: getCorsOrigins(),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'X-Request-Id']
 }));
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies

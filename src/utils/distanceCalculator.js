@@ -200,14 +200,15 @@ const sleep = (ms) => {
 /**
  * Calculate journey cost based on distance and rate
  * @param {number} distance - Distance in kilometers
- * @param {number} rate - Rate per kilometer (optional, defaults to env or 8)
+ * @param {number} rate - Rate per kilometer (required - fetch from Settings.getRatePerKm())
  * @returns {number} Cost in rupees
  */
-const calculateJourneyCost = (distance, rate = null) => {
-  const defaultRate = parseFloat(process.env.DEFAULT_DISTANCE_RATE) || 8;
-  const actualRate = rate || defaultRate;
+const calculateJourneyCost = (distance, rate) => {
+  if (!rate || typeof rate !== 'number' || rate <= 0) {
+    throw new Error('Valid rate per kilometer is required for journey cost calculation');
+  }
 
-  return parseFloat((distance * actualRate).toFixed(2));
+  return parseFloat((distance * rate).toFixed(2));
 };
 
 /**

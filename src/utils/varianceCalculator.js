@@ -118,13 +118,14 @@ const isVarianceAcceptable = (variancePercentage, maxAcceptable = 10) => {
  * @param {Object} expense - Expense object
  * @param {number} approvedOption - Approved option (1=system, 2=manual, 3=admin)
  * @param {number} adminDistance - Admin override distance (required if option 3)
+ * @param {number} ratePerKm - Rate per kilometer (optional, uses expense.distanceRate if not provided)
  * @returns {number} Final approved amount
  *
  * @example
  * calculateApprovedAmount({ systemDistance: 10, distanceRate: 8, amount: 200 }, 1)
  * // Returns 280 (200 expense + 80 distance cost)
  */
-const calculateApprovedAmount = (expense, approvedOption, adminDistance = null) => {
+const calculateApprovedAmount = (expense, approvedOption, adminDistance = null, ratePerKm = null) => {
   if (!expense) {
     throw new Error('Expense object is required');
   }
@@ -133,7 +134,12 @@ const calculateApprovedAmount = (expense, approvedOption, adminDistance = null) 
     throw new Error('Approved option must be 1, 2, or 3');
   }
 
-  const rate = expense.distanceRate || 8;
+  // Use provided rate, or expense's distanceRate, or throw error if neither exists
+  const rate = ratePerKm || expense.distanceRate;
+  if (!rate) {
+    throw new Error('Rate per kilometer is required. Either provide ratePerKm parameter or ensure expense.distanceRate is set.');
+  }
+
   let distanceCost = 0;
 
   // Calculate distance-based cost

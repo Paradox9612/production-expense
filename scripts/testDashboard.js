@@ -6,7 +6,7 @@
 require('dotenv').config();
 const axios = require('axios');
 
-const API_URL = process.env.API_URL || 'http://72.61.227.176:5000/api';
+const API_URL = process.env.API_URL || 'http://office.ssheavyequipment.com:5000/api';
 
 // Test counters
 let passed = 0;
